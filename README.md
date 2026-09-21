@@ -37,7 +37,9 @@ It produces two packages:
   ```
 
 - `git` and `build-essential`, plus internet access during the build (Go
-  modules are downloaded and verified against upstream's `go.sum`).
+  modules are downloaded and verified against upstream's `go.sum`). With
+  `--container` you need `git` and `podman` instead, and no backports Go on
+  the host.
 
 ## Build
 
@@ -60,6 +62,22 @@ config and bundled distrobox are really inside.
 Re-running it reuses the clones in `build/`. Pass `--clean` to delete that
 directory and start from scratch. Build dependencies can be removed
 afterwards; the installed packages don't need them.
+
+### Without installing build tools
+
+```sh
+./build.sh --container
+```
+
+This runs the whole build inside a podman container built from the
+`Containerfile`: trixie plus the build dependencies, with Go from backports.
+The host needs only `git` and `podman`, which apx requires anyway, and gets
+no compiler, no debhelper and no backports Go. The image layers are cached,
+so only the first run installs anything; a full clean build takes about a
+minute here.
+
+Rootless podman maps you to root inside the container, so the `.deb` files
+land in `build/` owned by you.
 
 ### By hand
 
