@@ -53,7 +53,12 @@ its `_apt` user.
 
 `build.sh` clones upstream into `build/`, overlays the packaging, installs the
 build dependencies with `sudo` (only Go comes from backports), and runs
-`dpkg-buildpackage` for each package. Build dependencies can be removed
+`dpkg-buildpackage` for each package. It then checks what came out: that the
+packages exist, that apx's runtime dependencies mention no Go, and that the
+config and bundled distrobox are really inside.
+
+Re-running it reuses the clones in `build/`. Pass `--clean` to delete that
+directory and start from scratch. Build dependencies can be removed
 afterwards; the installed packages don't need them.
 
 ### By hand

@@ -14,6 +14,26 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 step() { printf '\n==> %s\n' "$*"; }
 ok() { printf '    ok: %s\n' "$*"; }
 
+usage() {
+    cat <<EOF
+usage: $0 [--clean]
+
+Builds apx and apx-stacks .debs from pinned upstream sources.
+
+  --clean   delete the build/ directory first, so everything is fetched
+            and built from scratch; without it, clones are reused
+EOF
+}
+
+clean=false
+for arg in "$@"; do
+    case $arg in
+        --clean) clean=true ;;
+        -h|--help) usage; exit 0 ;;
+        *) usage >&2; die "unknown argument: $arg" ;;
+    esac
+done
+
 # --- Before we touch anything ------------------------------------------
 
 . /etc/os-release
@@ -25,6 +45,10 @@ for t in git dpkg-buildpackage dpkg-checkbuilddeps; do
 done
 command -v sudo >/dev/null || die "sudo is needed to install build dependencies"
 
+if $clean && [ -d "$build" ]; then
+    step "Removing $build"
+    rm -rf "$build"
+fi
 mkdir -p "$build"
 
 # --- Upstream sources, pinned ------------------------------------------
