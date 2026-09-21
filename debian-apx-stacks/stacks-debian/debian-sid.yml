@@ -1,0 +1,7 @@
+# Debian unstable (sid): newest Debian packages, rolling.
+
+name: debian-sid
+base: docker.io/library/debian:unstable
+packages: []
+pkgmanager: apt
+builtin: false

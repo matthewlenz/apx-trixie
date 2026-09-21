@@ -1,3 +1,10 @@
+apx-stacks (0~git20250614.e0b0221+trixie2) trixie; urgency=medium
+
+  * Add debian-testing and debian-sid stacks; apx-community has none for
+    Debian itself.
+
+ -- Matthew Lenz <matthewlenz@gmail.com>  Sun, 20 Sep 2026 20:05:00 -0500
+
 apx-stacks (0~git20250614.e0b0221+trixie1) trixie; urgency=medium
 
   * Build recipe for Debian 13 (trixie), from apx-community e0b0221.

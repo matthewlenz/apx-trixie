@@ -133,6 +133,8 @@ dpkg-deb --fsys-tarfile "$apx_deb" | tar xO ./usr/share/apx/distrobox/distrobox-
     || die "distrobox-init in $apx_deb is missing the tmpfiles patch"
 yml=$(printf '%s\n' "$stacks_files" | grep -c '\.yml$')
 [ "$yml" -gt 0 ] || die "no YAML files in $stacks_deb"
+printf '%s\n' "$stacks_files" | grep -q 'stacks/debian-testing.yml$' \
+    || die "our own Debian stacks are missing from $stacks_deb"
 ok "apx depends on: $deps"
 ok "apx-stacks ships $yml YAML files"
 

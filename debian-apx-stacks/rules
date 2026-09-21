@@ -10,4 +10,6 @@ DEST := $(CURDIR)/debian/apx-stacks/usr/share/apx
 override_dh_auto_install:
 	install -d $(DEST)/stacks $(DEST)/package-managers
 	install -m644 stacks/*/*.yml $(DEST)/stacks/
+	# Our own stacks: apx-community ships none for Debian itself.
+	install -m644 debian/stacks-debian/*.yml $(DEST)/stacks/
 	install -m644 pkgmanagers/*.yml $(DEST)/package-managers/

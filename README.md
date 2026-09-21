@@ -112,18 +112,18 @@ which are the images Debian users are most likely to want.
 The fix is upstream's own, released so far only in distrobox 2.0.0-rc.4,
 while apx bundles 1.8.1.2. It can be dropped once apx updates its submodule.
 
-apx ships no Debian stacks, but they are three lines. Put this in
-`~/.local/share/apx/stacks/debian-testing.yml`:
+apx-community has no Debian stacks at all, so `apx-stacks` adds two of our
+own (`debian-apx-stacks/stacks-debian/`):
 
-```yaml
-name: debian-testing
-base: docker.io/library/debian:testing
-packages: []
-pkgmanager: apt
+```sh
+apx subsystems new -n forky -s debian-testing   # or debian-sid
+apx forky install ripgrep
 ```
 
-Then `apx subsystems new -n forky -s debian-testing`, and
-`apx forky install <pkg>` pulls from testing without touching the host.
+That pulls from testing or unstable without touching the host. Note that a
+stack is only a name, an image, a package list and a package manager, with
+no hooks, so a "stable plus backports" stack is not expressible; enable
+backports inside a container after creating it.
 
 ## Known upstream quirks
 

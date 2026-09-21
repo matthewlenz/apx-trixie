@@ -16,4 +16,6 @@ Depends: apx,
          ${misc:Depends}
 Description: default apx stacks and package-manager definitions
  Stack and package-manager YAML definitions from apx-community that let
- apx create subsystems based on Fedora, Arch Linux, Ubuntu and Vanilla OS.
+ apx create subsystems based on Fedora, Arch Linux, Ubuntu and Vanilla OS,
+ plus stacks for Debian testing and unstable, which apx-community does not
+ provide.

@@ -1,0 +1,7 @@
+# Debian testing: newer packages than stable, contained.
+
+name: debian-testing
+base: docker.io/library/debian:testing
+packages: []
+pkgmanager: apt
+builtin: false
