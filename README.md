@@ -20,26 +20,16 @@ It produces two packages:
 ## Requirements
 
 - Debian 13 (trixie).
-- **trixie-backports enabled.** apx needs Go 1.25 or newer, and trixie only
-  ships 1.24. Go is needed at build time only: the installed `apx` has no Go
-  dependency. Check with:
+- `git` and `podman`. That's it — podman is what apx itself needs, and the
+  build happens inside a container, so the host gets no compiler, no
+  debhelper and no Go.
+- Internet access during the build, for the base image, the build
+  dependencies and the Go modules (verified against upstream's `go.sum`).
 
-  ```sh
-  apt-cache policy golang-go | grep trixie-backports
-  ```
-
-  If that prints nothing, enable backports:
-
-  ```sh
-  echo 'deb http://deb.debian.org/debian trixie-backports main' \
-    | sudo tee /etc/apt/sources.list.d/backports.list
-  sudo apt update
-  ```
-
-- `git` and `build-essential`, plus internet access during the build (Go
-  modules are downloaded and verified against upstream's `go.sum`). With
-  `--container` you need `git` and `podman` instead, and no backports Go on
-  the host.
+apx needs Go 1.25 while trixie ships 1.24, so the build image takes Go from
+trixie-backports. That is the build container's business, not your system's.
+Go is build-time only: the resulting `apx` is a static binary that depends on
+nothing but a container engine.
 
 ## Build
 
@@ -49,35 +39,22 @@ git clone https://github.com/matthewlenz/apx-trixie.git && cd apx-trixie
 sudo apt install ./build/apx_*.deb ./build/apx-stacks_*.deb
 ```
 
+`build.sh` clones upstream into `build/`, overlays the packaging, builds an
+image from the `Containerfile` (trixie plus the build dependencies), and runs
+`dpkg-buildpackage` inside it for each package. It then checks what came out:
+that both packages exist, that apx's runtime dependencies mention no Go, and
+that the config, the bundled distrobox and the stacks are really inside.
+
+Image layers are cached, so only the first run installs anything; a full
+clean build takes well under a minute. Rootless podman maps you to root
+inside the container, so the `.deb` files land in `build/` owned by you.
+
+Re-running reuses the clones in `build/`. Pass `--clean` to delete that
+directory and start from scratch.
+
 apt may print a notice that the download was "performed unsandboxed as
 root". That's harmless: apt couldn't read files inside your home directory as
 its `_apt` user.
-
-`build.sh` clones upstream into `build/`, overlays the packaging, installs the
-build dependencies with `sudo` (only Go comes from backports), and runs
-`dpkg-buildpackage` for each package. It then checks what came out: that the
-packages exist, that apx's runtime dependencies mention no Go, and that the
-config and bundled distrobox are really inside.
-
-Re-running it reuses the clones in `build/`. Pass `--clean` to delete that
-directory and start from scratch. Build dependencies can be removed
-afterwards; the installed packages don't need them.
-
-### Without installing build tools
-
-```sh
-./build.sh --container
-```
-
-This runs the whole build inside a podman container built from the
-`Containerfile`: trixie plus the build dependencies, with Go from backports.
-The host needs only `git` and `podman`, which apx requires anyway, and gets
-no compiler, no debhelper and no backports Go. The image layers are cached,
-so only the first run installs anything; a full clean build takes about a
-minute here.
-
-Rootless podman maps you to root inside the container, so the `.deb` files
-land in `build/` owned by you.
 
 ### By hand
 
@@ -91,16 +68,20 @@ git clone https://github.com/Vanilla-OS/apx-community.git build/apx-community
 git -C build/apx-community checkout e0b022184dd3c70a27727741dfc988ae813fca2d
 cp -r debian-apx-stacks build/apx-community/debian
 
-# build dependencies: Go from backports first, then the rest from main
-sudo apt install -t trixie-backports golang-go
-sudo apt build-dep ./build/apx ./build/apx-community
-
-(cd build/apx && dpkg-buildpackage -us -uc -b)
-(cd build/apx-community && dpkg-buildpackage -us -uc -b)
+# the build environment, then a build in it
+podman build -t apx-trixie-build -f Containerfile .
+podman run --rm -v "$PWD/build:/build" -w /build/apx apx-trixie-build \
+    dpkg-buildpackage -us -uc -b
+podman run --rm -v "$PWD/build:/build" -w /build/apx-community apx-trixie-build \
+    dpkg-buildpackage -us -uc -b
 ```
 
-Install Go explicitly as the first step: a plain `apt build-dep` won't use
-backports on its own, and would fail because trixie's Go 1.24 is too old.
+Nothing stops you building on the host instead, if you would rather have the
+tooling there: enable trixie-backports, `sudo apt install -t trixie-backports
+golang-go`, `sudo apt build-dep ./build/apx ./build/apx-community`, then
+`dpkg-buildpackage -us -uc -b` in each tree. Install Go explicitly first,
+because a plain `apt build-dep` will not take it from backports and trixie's
+1.24 is too old.
 
 ## Try it
 

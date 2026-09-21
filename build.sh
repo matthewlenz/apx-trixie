@@ -16,25 +16,22 @@ ok() { printf '    ok: %s\n' "$*"; }
 
 usage() {
     cat <<EOF
-usage: $0 [--clean] [--container]
+usage: $0 [--clean]
 
-Builds apx and apx-stacks .debs from pinned upstream sources.
+Builds apx and apx-stacks .debs from pinned upstream sources, inside a
+podman container, so the host needs no compiler, debhelper or backports Go.
 
-  --clean       delete the build/ directory first, so everything is fetched
-                and built from scratch; without it, clones are reused
-  --container   build inside a podman container instead of on the host, so
-                no build tooling or backports Go is installed here; podman
-                is needed by apx anyway
+  --clean   delete the build/ directory first, so everything is fetched
+            and built from scratch; without it, clones are reused
 EOF
 }
 
 clean=false
-container=false
 IMAGE=localhost/apx-trixie-build
 for arg in "$@"; do
     case $arg in
         --clean) clean=true ;;
-        --container) container=true ;;
+        --container) printf 'note: container builds are the default now\n' >&2 ;;
         -h|--help) usage; exit 0 ;;
         *) usage >&2; die "unknown argument: $arg" ;;
     esac
@@ -44,18 +41,9 @@ done
 
 . /etc/os-release
 [ "${VERSION_CODENAME:-}" = trixie ] || die "this recipe targets Debian 13 (trixie), found ${PRETTY_NAME:-unknown}"
-apt-cache policy golang-go | grep -q trixie-backports \
-    || die "trixie-backports is not enabled (or 'apt update' has not run); see README.md"
 command -v git >/dev/null || die "missing git: sudo apt install git"
+command -v podman >/dev/null || die "missing podman: sudo apt install podman"
 command -v dpkg-deb >/dev/null || die "missing dpkg-deb"
-if $container; then
-    command -v podman >/dev/null || die "missing podman: sudo apt install podman"
-else
-    for t in dpkg-buildpackage dpkg-checkbuilddeps; do
-        command -v "$t" >/dev/null || die "missing $t: sudo apt install build-essential"
-    done
-    command -v sudo >/dev/null || die "sudo is needed to install build dependencies"
-fi
 
 if $clean && [ -d "$build" ]; then
     step "Removing $build"
@@ -90,45 +78,25 @@ stacks=$(ls "$build"/apx-community/stacks/*/*.yml 2>/dev/null | wc -l)
 ok "apx-community at $(git -C "$build/apx-community" rev-parse --short HEAD), $stacks stacks"
 rm -rf "$build/apx-community/debian" && cp -r "$here/debian-apx-stacks" "$build/apx-community/debian"
 
-# --- Build dependencies ------------------------------------------------
+# --- Build environment -------------------------------------------------
 
-if $container; then
-    step "Building the container image"
-    # Layers are cached, so only the first run installs anything.
-    podman build -t "$IMAGE" -f "$here/Containerfile" "$here"
-    go_version=$(podman run --rm "$IMAGE" go version | awk '{print $3}' | sed 's/^go//')
-else
-    step "Installing build dependencies (sudo)"
-    # Go >= 1.25 comes from backports; everything else from trixie main.
-    sudo apt install -y -t trixie-backports golang-go
-    sudo apt build-dep -y "$build/apx" "$build/apx-community"
-    go_version=$(go version 2>/dev/null | awk '{print $3}' | sed 's/^go//')
-fi
-
-[ -n "$go_version" ] || die "go is not available after installing golang-go"
+step "Building the container image"
+# Trixie plus the build dependencies, Go included. Layers are cached, so
+# only the first run installs anything.
+podman build -t "$IMAGE" -f "$here/Containerfile" "$here"
+go_version=$(podman run --rm "$IMAGE" go version | awk '{print $3}' | sed 's/^go//')
+[ -n "$go_version" ] || die "go is missing from the build image"
 dpkg --compare-versions "$go_version" ge "$GO_MIN" \
-    || die "go $go_version is older than $GO_MIN; is trixie-backports really enabled?"
-ok "go $go_version"
-
-if ! $container; then
-    for tree in "$build/apx" "$build/apx-community"; do
-        (cd "$tree" && dpkg-checkbuilddeps) \
-            || die "build dependencies are still unsatisfied in $tree (see the list above)"
-    done
-    ok "build dependencies satisfied"
-fi
+    || die "the build image has go $go_version, older than $GO_MIN"
+ok "go $go_version in $IMAGE"
 
 # --- Build -------------------------------------------------------------
 
 # Rootless podman maps the host user to root inside, so files written to the
 # mounted build directory come back owned by the host user.
 build_tree() {
-    if $container; then
-        podman run --rm -v "$build:/build" -w "/build/$1" "$IMAGE" \
-            dpkg-buildpackage -us -uc -b
-    else
-        (cd "$build/$1" && dpkg-buildpackage -us -uc -b)
-    fi
+    podman run --rm -v "$build:/build" -w "/build/$1" "$IMAGE" \
+        dpkg-buildpackage -us -uc -b
 }
 
 step "Building apx"
