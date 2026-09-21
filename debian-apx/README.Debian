@@ -1,0 +1,19 @@
+apx for Debian
+==============
+
+Differences from an upstream "make install":
+
+* The configuration is installed as /etc/apx/config.json. Upstream's Makefile
+  writes /etc/apx/apx.json, but apx only reads config.json, so a subsystem
+  built that way finds no stacks.
+
+* distrobox is bundled, in /usr/share/apx/distrobox/, and is the copy apx
+  drives. Debian's own distrobox package is separate and unaffected.
+
+* apx ships no stacks. Install apx-stacks for a default set, or drop your own
+  YAML files into /usr/share/apx/stacks or ~/.local/share/apx/stacks.
+
+apx uses podman if it is installed and Docker otherwise. Rootless podman needs
+uidmap, which is why this package depends on it.
+
+ -- Matthew Lenz <matthewlenz@gmail.com>  Sun, 20 Sep 2026 19:07:12 -0500

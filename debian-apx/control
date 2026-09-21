@@ -11,7 +11,8 @@ Homepage: https://github.com/Vanilla-OS/apx
 Package: apx
 Architecture: linux-any
 Depends: ${misc:Depends},
-         podman
+         podman | docker.io,
+         uidmap
 Recommends: apx-stacks
 Description: create and manage container-based Linux subsystems
  Apx lets you create subsystems based on other Linux distributions

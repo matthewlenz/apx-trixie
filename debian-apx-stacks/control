@@ -9,6 +9,7 @@ Homepage: https://github.com/Vanilla-OS/apx-community
 
 Package: apx-stacks
 Architecture: all
+Multi-Arch: foreign
 Depends: apx,
          ${misc:Depends}
 Description: default apx stacks and package-manager definitions

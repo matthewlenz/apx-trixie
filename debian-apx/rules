@@ -1,6 +1,9 @@
 #!/usr/bin/make -f
 
-# Go is build-only: the result is a static binary with no runtime deps.
+# Go is build-only: the result is a static binary, so the package needs no
+# libraries at runtime. -buildmode=pie is deliberately not used: without cgo
+# it yields a dynamically linked binary that needs ld.so but records no
+# library dependencies for dh_shlibdeps to find.
 # GOTOOLCHAIN=local stops go from silently downloading a newer toolchain
 # when the installed one is too old; it fails with a clear error instead.
 export GOTOOLCHAIN := local
@@ -10,6 +13,7 @@ export GOCACHE := $(CURDIR)/debian/.cache/go-build
 export GOMODCACHE := $(CURDIR)/debian/.cache/gomod
 
 DEST := $(CURDIR)/debian/apx
+
 
 %:
 	dh $@
@@ -27,6 +31,8 @@ override_dh_auto_install:
 	install -m755 distrobox/distrobox distrobox/distrobox-* $(DEST)/usr/share/apx/distrobox/
 	install -Dm644 man/man1/apx.1 $(DEST)/usr/share/man/man1/apx.1
 
+# Upstream's tests drive podman and need network access, so they can't run
+# during a package build.
 override_dh_auto_test:
 
 # dwz can't process Go's DWARF.
