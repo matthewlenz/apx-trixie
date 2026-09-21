@@ -6,6 +6,8 @@ Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.7.2
 Rules-Requires-Root: no
 Homepage: https://github.com/Vanilla-OS/apx-community
+Vcs-Browser: https://github.com/matthewlenz/apx-trixie
+Vcs-Git: https://github.com/matthewlenz/apx-trixie.git
 
 Package: apx-stacks
 Architecture: all

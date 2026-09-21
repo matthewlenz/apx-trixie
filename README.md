@@ -42,7 +42,7 @@ It produces two packages:
 ## Build
 
 ```sh
-git clone <this repo> apx-trixie && cd apx-trixie
+git clone https://github.com/matthewlenz/apx-trixie.git && cd apx-trixie
 ./build.sh
 sudo apt install ./build/apx_*.deb ./build/apx-stacks_*.deb
 ```
