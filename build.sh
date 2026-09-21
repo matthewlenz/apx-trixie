@@ -94,11 +94,15 @@ deps=$(dpkg-deb -f "$apx_deb" Depends)
 case "$deps" in
     *golang*|*libc6*) die "unexpected runtime dependency in apx: $deps" ;;
 esac
-dpkg-deb -c "$apx_deb" | grep -q 'usr/share/apx/distrobox/distrobox$' \
+# Read each package's contents once: piping dpkg-deb into grep -q makes
+# grep exit early and dpkg-deb die of SIGPIPE.
+apx_files=$(dpkg-deb -c "$apx_deb")
+stacks_files=$(dpkg-deb -c "$stacks_deb")
+printf '%s\n' "$apx_files" | grep -q 'usr/share/apx/distrobox/distrobox$' \
     || die "the bundled distrobox is missing from $apx_deb"
-dpkg-deb -c "$apx_deb" | grep -q 'etc/apx/config.json$' \
+printf '%s\n' "$apx_files" | grep -q 'etc/apx/config.json$' \
     || die "the config is missing from $apx_deb"
-yml=$(dpkg-deb -c "$stacks_deb" | grep -c '\.yml$')
+yml=$(printf '%s\n' "$stacks_files" | grep -c '\.yml$')
 [ "$yml" -gt 0 ] || die "no YAML files in $stacks_deb"
 ok "apx depends on: $deps"
 ok "apx-stacks ships $yml YAML files"
