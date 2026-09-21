@@ -18,6 +18,14 @@ DEST := $(CURDIR)/debian/apx
 %:
 	dh $@
 
+override_dh_auto_configure:
+	# Without this, containers running systemd >= 261 (Debian testing and
+	# unstable) fail to initialise. The guard keeps rebuilds idempotent,
+	# since the tree is not unpacked fresh each time.
+	grep -q setup_tmpfiles_exceptions distrobox/distrobox-init \
+	    || patch -p1 < debian/patches/distrobox-mask-tmpfiles.patch
+	dh_auto_configure
+
 override_dh_auto_build:
 	go build -o apx ./cmd
 

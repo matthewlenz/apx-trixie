@@ -3,7 +3,8 @@ Section: admin
 Priority: optional
 Maintainer: Matthew Lenz <matthewlenz@gmail.com>
 Build-Depends: debhelper-compat (= 13),
-               golang-go (>= 2:1.25~)
+               golang-go (>= 2:1.25~),
+               patch
 Standards-Version: 4.7.2
 Rules-Requires-Root: no
 Homepage: https://github.com/Vanilla-OS/apx

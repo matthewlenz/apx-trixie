@@ -1,0 +1,54 @@
+Description: mask systemd-tmpfiles rules over host-shared paths
+ In rootless containers systemd-tmpfiles chowns the bind-mounted /tmp, /dev
+ and /sys and fails with EPERM, which aborts package setup and leaves the
+ container unusable. This hits every image with systemd >= 261 or tpm-udev,
+ so Debian testing and unstable subsystems cannot be created at all.
+ .
+ Backported from distrobox upstream, where it is released only in the
+ 2.0.0-rc.4 pre-release; apx bundles 1.8.1.2. Drop this patch once apx
+ updates its distrobox submodule to 2.0.0 or newer.
+Origin: upstream, https://github.com/89luca89/distrobox/commit/1ed078f68a04c6c65eadc9fd3d0871bcc6d5eebc
+Author: Luca Di Maio <luca.dimaio1@gmail.com>
+Applied-Upstream: 2.0.0-rc.4
+Last-Update: 2026-09-20
+---
+--- a/distrobox/distrobox-init
++++ b/distrobox/distrobox-init
+@@ -467,6 +467,26 @@
+ 	fi
+ }
+ 
++# setup_tmpfiles_exceptions masks the systemd-tmpfiles configs that chown paths
++# bind mounted from the host.
++# Arguments:
++#   None
++# Expected global variables:
++#   None
++# Expected env variables:
++#   None
++# Outputs:
++#   None
++setup_tmpfiles_exceptions()
++{
++	mkdir -p /etc/tmpfiles.d
++	for tmpfiles_conf in \
++		tmp.conf x11.conf systemd-tmp.conf openssh-client.conf \
++		tpm-udev.conf tpm2-tss-fapi.conf; do
++		ln -sf /dev/null "/etc/tmpfiles.d/${tmpfiles_conf}"
++	done
++}
++
+ # setup_deb_exceptions will create path-excludes for host mounts, dpkg/apt only.
+ # Arguments:
+ #   None
+@@ -1648,6 +1668,10 @@
+ # Ensure we have the least minimal path of standard Linux File System set
+ PATH="${PATH}:/bin:/sbin:/usr/bin:/usr/sbin"
+ 
++# Mask systemd-tmpfiles rules over host-shared paths before any package manager
++# runs its maintainer scripts.
++setup_tmpfiles_exceptions
++
+ # Setup pkg manager exceptions and excludes
+ if command -v apt-get; then
+ 	setup_deb_exceptions

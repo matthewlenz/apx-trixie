@@ -100,6 +100,31 @@ container and installs the stack's packages; after that it's quick. Use
 
 If Docker is installed as well, apx uses podman first.
 
+## Debian testing and unstable
+
+The bundled distrobox carries one backported fix
+(`debian-apx/patches/distrobox-mask-tmpfiles.patch`). Without it, any image
+with systemd 261 or newer fails to initialise under rootless podman:
+systemd-tmpfiles tries to chown the bind-mounted /tmp, /dev and /sys, gets
+EPERM, and package setup aborts. That covers Debian testing and unstable,
+which are the images Debian users are most likely to want.
+
+The fix is upstream's own, released so far only in distrobox 2.0.0-rc.4,
+while apx bundles 1.8.1.2. It can be dropped once apx updates its submodule.
+
+apx ships no Debian stacks, but they are three lines. Put this in
+`~/.local/share/apx/stacks/debian-testing.yml`:
+
+```yaml
+name: debian-testing
+base: docker.io/library/debian:testing
+packages: []
+pkgmanager: apt
+```
+
+Then `apx subsystems new -n forky -s debian-testing`, and
+`apx forky install <pkg>` pulls from testing without touching the host.
+
 ## Known upstream quirks
 
 - apx reads `/etc/apx/config.json`, but upstream's `make install` writes
@@ -108,6 +133,8 @@ If Docker is installed as well, apx uses podman first.
 - The "Built-in" column shows raw `apx.terminal.yes` / `apx.terminal.no`
   strings. Upstream's code and translation files disagree on these message
   names; it's cosmetic.
+- `apx <name> run` parses flags itself, so `apx forky run rg --version` fails
+  with "unknown flag". Use `apx <name> enter` for anything with flags.
 - apx-community carries no license statement. This recipe fetches it straight
   from upstream rather than redistributing it.
 
