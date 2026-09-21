@@ -1,0 +1,14 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: apx-community
+Source: https://github.com/Vanilla-OS/apx-community
+
+Files: *
+Copyright: Vanilla OS contributors
+License: none
+ The apx-community repository carries no license statement.
+
+Files: debian/*
+Copyright: 2026 Matthew Lenz <matthewlenz@gmail.com>
+License: GPL-3
+ On Debian systems, the complete text of the GNU General Public License
+ version 3 can be found in "/usr/share/common-licenses/GPL-3".

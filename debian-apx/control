@@ -1,0 +1,22 @@
+Source: apx
+Section: admin
+Priority: optional
+Maintainer: Matthew Lenz <matthewlenz@gmail.com>
+Build-Depends: debhelper-compat (= 13),
+               golang-go (>= 2:1.25~)
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/Vanilla-OS/apx
+
+Package: apx
+Architecture: linux-any
+Depends: ${misc:Depends},
+         podman
+Recommends: apx-stacks
+Description: create and manage container-based Linux subsystems
+ Apx lets you create subsystems based on other Linux distributions
+ (Fedora, Arch, Ubuntu, ...) and install their packages without touching
+ the host. Subsystems are podman containers managed through a bundled
+ copy of distrobox.
+ .
+ Apx ships no stacks of its own; install apx-stacks for a default set.

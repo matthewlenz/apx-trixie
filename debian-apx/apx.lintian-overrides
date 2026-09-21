@@ -1,0 +1,2 @@
+# Built with CGO_ENABLED=0 on purpose: no runtime deps beyond podman.
+apx: statically-linked-binary [usr/bin/apx]

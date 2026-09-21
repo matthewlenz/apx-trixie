@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+
+# Go is build-only: the result is a static binary with no runtime deps.
+# GOTOOLCHAIN=local stops go from silently downloading a newer toolchain
+# when the installed one is too old; it fails with a clear error instead.
+export GOTOOLCHAIN := local
+export CGO_ENABLED := 0
+export GOFLAGS := -trimpath -buildvcs=false -modcacherw
+export GOCACHE := $(CURDIR)/debian/.cache/go-build
+export GOMODCACHE := $(CURDIR)/debian/.cache/gomod
+
+DEST := $(CURDIR)/debian/apx
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	go build -o apx ./cmd
+
+override_dh_auto_install:
+	install -Dm755 apx $(DEST)/usr/bin/apx
+	# The vanilla-os SDK reads <dir>/apx/config.json; upstream installs
+	# apx.json, which apx never reads.
+	install -Dm644 config/apx.json $(DEST)/etc/apx/config.json
+	# Bundled distrobox, at the path config/apx.json points to.
+	install -d $(DEST)/usr/share/apx/distrobox
+	install -m755 distrobox/distrobox distrobox/distrobox-* $(DEST)/usr/share/apx/distrobox/
+	install -Dm644 man/man1/apx.1 $(DEST)/usr/share/man/man1/apx.1
+
+override_dh_auto_test:
+
+# dwz can't process Go's DWARF.
+override_dh_dwz:
+
+override_dh_auto_clean:
+	rm -f apx
+	rm -rf debian/.cache

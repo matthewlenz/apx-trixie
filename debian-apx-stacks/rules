@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+DEST := $(CURDIR)/debian/apx-stacks/usr/share/apx
+
+%:
+	dh $@
+
+# apx only scans a flat directory, but apx-community groups stacks
+# into per-distro subdirectories, so flatten them.
+override_dh_auto_install:
+	install -d $(DEST)/stacks $(DEST)/package-managers
+	install -m644 stacks/*/*.yml $(DEST)/stacks/
+	install -m644 pkgmanagers/*.yml $(DEST)/package-managers/

@@ -1,0 +1,33 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: apx
+Upstream-Contact: https://github.com/Vanilla-OS/apx/issues
+Source: https://github.com/Vanilla-OS/apx
+Comment:
+ The apx binary is statically linked and includes Go modules listed in
+ upstream's go.mod, each under its own license (MIT, BSD-3-Clause,
+ Apache-2.0).
+
+Files: *
+Copyright: Vanilla OS contributors
+License: GPL-3
+
+Files: distrobox/*
+Copyright: Luca Di Maio and distrobox contributors
+License: GPL-3
+
+Files: debian/*
+Copyright: 2026 Matthew Lenz <matthewlenz@gmail.com>
+License: GPL-3
+
+License: GPL-3
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, version 3.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ On Debian systems, the complete text of the GNU General Public License
+ version 3 can be found in "/usr/share/common-licenses/GPL-3".
