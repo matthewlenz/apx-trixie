@@ -1,5 +1,7 @@
 # apx for Debian 13 (trixie)
 
+
+
 Build recipe for [Vanilla OS apx](https://github.com/Vanilla-OS/apx) on
 Debian 13. This repo contains only packaging and directions: the sources are
 fetched from upstream at pinned versions, and you build the `.deb`s yourself.
@@ -18,6 +20,8 @@ It produces two packages:
 | apx-community | `e0b0221` (2025-06-14) |
 
 ## Requirements
+
+THIS WAS DEVELOPED USING AI.  REVIEW THE CODE BEFORE EXECUTING ANYTHING ON YOUR SYSTEM.
 
 - Debian 13 (trixie).
 - `git` and `podman`. That's it — podman is what apx itself needs, and the
