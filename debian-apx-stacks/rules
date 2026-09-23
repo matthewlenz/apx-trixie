@@ -10,6 +10,11 @@ DEST := $(CURDIR)/debian/apx-stacks/usr/share/apx
 override_dh_auto_install:
 	install -d $(DEST)/stacks $(DEST)/package-managers
 	install -m644 stacks/*/*.yml $(DEST)/stacks/
-	# Our own stacks: apx-community ships none for Debian itself.
+	# Base distro stacks from vanilla-apx-configs, which is where Vanilla OS
+	# maintains the ones it ships; apx-community has not moved since 2025.
+	install -m644 debian/stacks-vanilla/*.yaml $(DEST)/stacks/
+	# Our own stacks: neither upstream has one for Debian testing or sid.
 	install -m644 debian/stacks-debian/*.yml $(DEST)/stacks/
-	install -m644 pkgmanagers/*.yml $(DEST)/package-managers/
+	# Package managers from one source only. apx lists every file in the
+	# directory, so apt.yml beside apt.yaml would show "apt" twice.
+	install -m644 debian/pkgmanagers-vanilla/*.yaml $(DEST)/package-managers/

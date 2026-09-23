@@ -5,7 +5,7 @@ Maintainer: Matthew Lenz <matthewlenz@gmail.com>
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.7.2
 Rules-Requires-Root: no
-Homepage: https://github.com/Vanilla-OS/apx-community
+Homepage: https://github.com/Vanilla-OS/vanilla-apx-configs
 Vcs-Browser: https://github.com/matthewlenz/apx-trixie
 Vcs-Git: https://github.com/matthewlenz/apx-trixie.git
 
@@ -15,7 +15,12 @@ Multi-Arch: foreign
 Depends: apx,
          ${misc:Depends}
 Description: default apx stacks and package-manager definitions
- Stack and package-manager YAML definitions from apx-community that let
- apx create subsystems based on Fedora, Arch Linux, Ubuntu and Vanilla OS,
- plus stacks for Debian testing and unstable, which apx-community does not
- provide.
+ Stack and package-manager YAML definitions that let apx create subsystems
+ based on other distributions. The base stacks and the package managers
+ come from vanilla-apx-configs, the set Vanilla OS itself ships: Alpine,
+ Arch Linux, Debian, Fedora, openSUSE, Ubuntu and Vanilla OS. The
+ language-specific stacks, such as arch-go or ubuntu-python, come from
+ apx-community.
+ .
+ Neither upstream provides a stack for Debian testing or unstable, so this
+ package adds one of each.

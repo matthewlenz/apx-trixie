@@ -10,14 +10,23 @@ It produces two packages:
 
 - **`apx`**: the apx binary plus its bundled copy of distrobox. It depends
   only on `podman`, not on Go.
-- **`apx-stacks`**: the stack and package-manager definitions from
-  [apx-community](https://github.com/Vanilla-OS/apx-community) (Fedora, Arch,
-  Ubuntu, Vanilla OS). apx has no stacks of its own, so you want this too.
+- **`apx-stacks`**: the stack and package-manager definitions. apx ships
+  none of its own, so you want this too. They come from two upstream repos:
+  [vanilla-apx-configs](https://github.com/Vanilla-OS/vanilla-apx-configs)
+  for the base distro stacks Vanilla OS itself ships (Alpine, Arch, Debian,
+  Fedora, openSUSE, Ubuntu, Vanilla OS) and the package managers, and
+  [apx-community](https://github.com/Vanilla-OS/apx-community) for the
+  language-specific ones (`arch-go`, `ubuntu-python`, `fedora-rust`, …).
 
 | | Pinned version |
 |---|---|
 | apx | `v3.1.2` |
+| vanilla-apx-configs | `1a37e75` (2026-06-22) |
 | apx-community | `e0b0221` (2025-06-14) |
+
+apx-community has had no commits since June 2025, which is why the base
+stacks come from vanilla-apx-configs instead. Its language stacks are still
+useful, so both are pinned.
 
 ## Requirements
 
@@ -65,10 +74,15 @@ its `_apt` user.
 git clone --recurse-submodules --branch v3.1.2 https://github.com/Vanilla-OS/apx.git build/apx
 cp -r debian-apx build/apx/debian
 
-# apx-stacks
+# apx-stacks, built from the apx-community tree with the other two
+# sources overlaid into debian/
 git clone https://github.com/Vanilla-OS/apx-community.git build/apx-community
 git -C build/apx-community checkout e0b022184dd3c70a27727741dfc988ae813fca2d
 cp -r debian-apx-stacks build/apx-community/debian
+git clone https://github.com/Vanilla-OS/vanilla-apx-configs.git build/vanilla-apx-configs
+git -C build/vanilla-apx-configs checkout 1a37e751e7326da7b26ccf6c76dd46999efc2166
+cp -r build/vanilla-apx-configs/stacks build/apx-community/debian/stacks-vanilla
+cp -r build/vanilla-apx-configs/package-managers build/apx-community/debian/pkgmanagers-vanilla
 
 # the build environment, then a build in it
 podman build -t apx-trixie-build -f Containerfile .
@@ -113,8 +127,10 @@ which are the images Debian users are most likely to want.
 The fix is upstream's own, released so far only in distrobox 2.0.0-rc.4,
 while apx bundles 1.8.1.2. It can be dropped once apx updates its submodule.
 
-apx-community has no Debian stacks at all, so `apx-stacks` adds two of our
-own (`debian-apx-stacks/stacks-debian/`):
+Upstream's own `debian` stack is `debian:latest`, which is stable — the same
+packages you already have on the host. Neither upstream has one for testing
+or unstable, so `apx-stacks` adds two of our own
+(`debian-apx-stacks/stacks-debian/`):
 
 ```sh
 apx subsystems new -n forky -s debian-testing   # or debian-sid

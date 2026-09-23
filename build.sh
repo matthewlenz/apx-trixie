@@ -5,6 +5,7 @@ set -eu
 
 APX_TAG=v3.1.2
 COMMUNITY_COMMIT=e0b022184dd3c70a27727741dfc988ae813fca2d
+CONFIGS_COMMIT=1a37e751e7326da7b26ccf6c76dd46999efc2166
 GO_MIN=1.25
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -78,6 +79,21 @@ stacks=$(ls "$build"/apx-community/stacks/*/*.yml 2>/dev/null | wc -l)
 ok "apx-community at $(git -C "$build/apx-community" rev-parse --short HEAD), $stacks stacks"
 rm -rf "$build/apx-community/debian" && cp -r "$here/debian-apx-stacks" "$build/apx-community/debian"
 
+step "Fetching vanilla-apx-configs $CONFIGS_COMMIT"
+# The base distro stacks and the package managers live here now: this is
+# what Vanilla OS ships, and apx-community has had no commits since 2025.
+[ -d "$build/vanilla-apx-configs" ] || git clone https://github.com/Vanilla-OS/vanilla-apx-configs.git "$build/vanilla-apx-configs"
+git -C "$build/vanilla-apx-configs" fetch --quiet
+git -C "$build/vanilla-apx-configs" -c advice.detachedHead=false checkout --quiet "$CONFIGS_COMMIT"
+[ "$(git -C "$build/vanilla-apx-configs" rev-parse HEAD)" = "$CONFIGS_COMMIT" ] \
+    || die "vanilla-apx-configs is not checked out at $CONFIGS_COMMIT"
+base_stacks=$(ls "$build"/vanilla-apx-configs/stacks/*.yaml 2>/dev/null | wc -l)
+[ "$base_stacks" -gt 0 ] || die "no stack YAML files found in $build/vanilla-apx-configs/stacks"
+ok "vanilla-apx-configs at $(git -C "$build/vanilla-apx-configs" rev-parse --short HEAD), $base_stacks base stacks"
+# Overlaid into the apx-community tree, which is where apx-stacks is built.
+cp -r "$build/vanilla-apx-configs/stacks" "$build/apx-community/debian/stacks-vanilla"
+cp -r "$build/vanilla-apx-configs/package-managers" "$build/apx-community/debian/pkgmanagers-vanilla"
+
 # --- Build environment -------------------------------------------------
 
 step "Building the container image"
@@ -131,12 +147,21 @@ printf '%s\n' "$apx_files" | grep -q 'etc/apx/config.json$' \
 dpkg-deb --fsys-tarfile "$apx_deb" | tar xO ./usr/share/apx/distrobox/distrobox-init 2>/dev/null \
     | grep -q setup_tmpfiles_exceptions \
     || die "distrobox-init in $apx_deb is missing the tmpfiles patch"
-yml=$(printf '%s\n' "$stacks_files" | grep -c '\.yml$')
-[ "$yml" -gt 0 ] || die "no YAML files in $stacks_deb"
+yml=$(printf '%s\n' "$stacks_files" | grep -c 'stacks/.*\.ya\?ml$')
+[ "$yml" -gt 0 ] || die "no stack YAML files in $stacks_deb"
 printf '%s\n' "$stacks_files" | grep -q 'stacks/debian-testing.yml$' \
     || die "our own Debian stacks are missing from $stacks_deb"
+printf '%s\n' "$stacks_files" | grep -q 'stacks/arch.yaml$' \
+    || die "the vanilla-apx-configs base stacks are missing from $stacks_deb"
+printf '%s\n' "$stacks_files" | grep -q 'stacks/ubuntu-go.yml$' \
+    || die "the apx-community language stacks are missing from $stacks_deb"
+# apx lists every file in the package-manager directory, so apt.yml beside
+# apt.yaml would show "apt" twice. Exactly one definition per name.
+dupes=$(printf '%s\n' "$stacks_files" | sed -n 's|.*/package-managers/\(.*\)\.ya\?ml$|\1|p' \
+    | sort | uniq -d)
+[ -z "$dupes" ] || die "duplicate package-manager definitions in $stacks_deb: $dupes"
 ok "apx depends on: $deps"
-ok "apx-stacks ships $yml YAML files"
+ok "apx-stacks ships $yml stacks"
 
 if command -v lintian >/dev/null; then
     lintian "$apx_deb" "$stacks_deb" || true

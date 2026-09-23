@@ -1,3 +1,15 @@
+apx-stacks (0~git20260622.1a37e75+trixie3) trixie; urgency=medium
+
+  * Take the base distro stacks and the package-manager definitions from
+    vanilla-apx-configs 1a37e75, which is where Vanilla OS now maintains
+    the set it ships. apx-community has had no commits since June 2025.
+  * Keep the language-specific stacks from apx-community e0b0221.
+  * Ship package managers from vanilla-apx-configs only: apx lists every
+    file in the directory, so apt.yml beside apt.yaml would show "apt"
+    twice.
+
+ -- Matthew Lenz <matthewlenz@gmail.com>  Tue, 22 Sep 2026 22:49:51 -0500
+
 apx-stacks (0~git20250614.e0b0221+trixie2) trixie; urgency=medium
 
   * Add debian-testing and debian-sid stacks; apx-community has none for
